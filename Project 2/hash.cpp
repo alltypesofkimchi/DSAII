@@ -34,6 +34,7 @@ int hashTable::insert(const std::string &key, void *pv)
 	    //cout << "inserted f " << key << " " << hashindex << endl;
 		data[hashindex].key = key;
 		data[hashindex].isOccupied = true;
+		data[hashindex].isDeleted = false;
 		filled++;
 		return 0;
 	}
@@ -45,7 +46,6 @@ bool hashTable::contains(const std::string &key)
 {
     if (findPos(key) > -1)
     {
-
         return true;
     }
     else
@@ -56,12 +56,42 @@ bool hashTable::contains(const std::string &key)
 
 void* hashTable::getPointer(const std::string &key, bool *b)
 {
+    int pos = findPos(key);
+    if(pos == -1||data[pos].isDeleted)
+    {
+        *b = false;
+        return NULL;
+    }
+    else
+    {
+        *b = true;
+        return data[pos].pv;
+    }
 }
+
 int hashTable::setPointer(const std::string &key, void *pv)
 {
+    int pos = findPos(key);
+    if (pos == -1)
+        return 1;
+    else
+    {
+        data[pos].pv = pv;
+        return 0;
+    }
 }
+
 bool hashTable::remove(const std::string &key)
 {
+    int pos = findPos(key);
+    if(pos == -1)
+        return false;
+    else
+    {
+        data[pos].isDeleted = true;
+        data[pos].isOccupied = false;
+        return true;
+    }
 }
 
 // Hash Function
@@ -80,7 +110,8 @@ int hashTable::hash(const std::string &key)
 int hashTable::findPos(const std::string &key)
 {
 	int hashvalue = hash(key);
-	while (data[hashvalue].isOccupied) {
+	while (data[hashvalue].isOccupied && !data[hashvalue].isDeleted)
+    {
         if(data[hashvalue].key == key)
             return hashvalue;
         hashvalue++;
